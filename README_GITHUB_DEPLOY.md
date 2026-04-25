@@ -53,6 +53,17 @@ git remote add origin https://github.com/Kaelheng/portfolio.git
 git push -u origin main
 ```
 
+如果你已经 `git add` 过但还没提交，直接执行这两条也可以：
+
+```bash
+git commit -m "feat: initial portfolio site"
+git push -u origin main
+```
+
+> 出现 `error: src refspec main does not match any` 的原因通常是“还没有 commit”。先执行 `git commit` 再 `git push` 即可。
+
+> 出现 `SSL certificate problem: unable to get local issuer certificate` 时，不要继续改 Git 配置。请先在系统里修复证书链（安装系统更新 / 更新 Git for Windows 到最新版），或改用 GitHub Desktop 完成首次 push。
+
 如果你之前已经初始化过 git，只需要：
 
 ```bash
