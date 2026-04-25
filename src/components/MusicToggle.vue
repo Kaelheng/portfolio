@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { resolveMediaUrl } from '../constants/mediaCdn'
 
 const audioEl = ref<HTMLAudioElement | null>(null)
 const audioDom = ref<HTMLAudioElement | null>(null)
@@ -53,7 +54,7 @@ let hintTimer: number | null = null
 const showHint = ref(true)
 const playingVideos = new Set<HTMLVideoElement>()
 
-const bgmSrc = new URL('../../music/music1.mp3', import.meta.url).href
+const bgmSrc = resolveMediaUrl('music/music1.mp3')
 
 async function playMusic() {
   const el = audioEl.value
