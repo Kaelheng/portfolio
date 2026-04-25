@@ -47,6 +47,8 @@ const userPaused = ref(false)
 const interruptedByVideo = ref(false)
 let autoplayRetryTimer: number | null = null
 let autoplayRetryInterval: number | null = null
+let autoplayRetryCount = 0
+const MAX_AUTOPLAY_RETRY = 8
 let hintTimer: number | null = null
 const showHint = ref(true)
 const playingVideos = new Set<HTMLVideoElement>()
@@ -59,6 +61,11 @@ async function playMusic() {
   try {
     await el.play()
     isPlaying.value = true
+    autoplayRetryCount = 0
+    if (autoplayRetryInterval !== null) {
+      window.clearInterval(autoplayRetryInterval)
+      autoplayRetryInterval = null
+    }
     window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: true } }))
     return true
   } catch {
@@ -117,6 +124,12 @@ async function onAnyMediaEnded(e: Event) {
 function retryAutoplay() {
   if (isPlaying.value || userPaused.value) return
   if (playingVideos.size > 0) return
+  autoplayRetryCount += 1
+  if (autoplayRetryCount > MAX_AUTOPLAY_RETRY && autoplayRetryInterval !== null) {
+    window.clearInterval(autoplayRetryInterval)
+    autoplayRetryInterval = null
+    return
+  }
   void playMusic()
 }
 
