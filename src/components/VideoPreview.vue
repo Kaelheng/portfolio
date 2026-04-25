@@ -8,8 +8,9 @@
       ref="video"
       class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
       playsinline
-      preload="metadata"
-      :src="src"
+      :preload="shouldPlay ? 'metadata' : 'none'"
+      :src="activeSrc"
+      @canplay="onCanPlay"
       @loadeddata="loading = false"
     />
     <div
@@ -38,15 +39,19 @@ const props = defineProps<{ src: string }>()
 const { reduced } = usePrefersReducedMotion()
 const root = ref<HTMLDivElement | null>(null)
 const video = ref<HTMLVideoElement | null>(null)
-const loading = ref(true)
+const loading = ref(false)
 const needsUserGestureForSound = ref(false)
+const hasBeenVisible = ref(false)
+let soundRetryTimer: number | null = null
 
 const { ratio } = useInView(root, { threshold: 0.3 })
 const shouldPlay = computed(() => ratio.value >= 0.3 && !reduced.value)
+const shouldLoad = computed(() => ratio.value >= 0.08 || hasBeenVisible.value)
+const activeSrc = computed(() => (shouldLoad.value ? props.src : undefined))
 
 async function play() {
   const el = video.value
-  if (!el) return
+  if (!el || !activeSrc.value) return
   try {
     el.muted = false
     await el.play()
@@ -61,6 +66,45 @@ async function play() {
   }
 }
 
+function clearSoundRetry() {
+  if (soundRetryTimer !== null) {
+    window.clearInterval(soundRetryTimer)
+    soundRetryTimer = null
+  }
+}
+
+function tryEnableSound() {
+  const el = video.value
+  if (!el || !shouldPlay.value) return
+  if (el.paused) return
+  el.muted = false
+  el.volume = 1
+  void el.play().then(() => {
+    if (!el.muted) {
+      needsUserGestureForSound.value = false
+      clearSoundRetry()
+    }
+  })
+}
+
+function ensureSoundWithRetry() {
+  clearSoundRetry()
+  if (!shouldPlay.value) return
+  soundRetryTimer = window.setInterval(() => {
+    if (!shouldPlay.value) {
+      clearSoundRetry()
+      return
+    }
+    tryEnableSound()
+  }, 800)
+}
+
+function onCanPlay() {
+  if (!shouldPlay.value) return
+  void play()
+  ensureSoundWithRetry()
+}
+
 function enableSound() {
   const el = video.value
   if (!el) return
@@ -68,6 +112,7 @@ function enableSound() {
   el.volume = 1
   void el.play().then(() => {
     needsUserGestureForSound.value = false
+    clearSoundRetry()
   })
 }
 
@@ -78,9 +123,50 @@ function pause() {
 }
 
 watch(shouldPlay, (sp) => {
-  if (sp) play()
-  else pause()
+  if (sp) {
+    play()
+    ensureSoundWithRetry()
+  } else {
+    clearSoundRetry()
+    pause()
+  }
 })
+
+watch(
+  ratio,
+  (r) => {
+    if (r >= 0.08 && !hasBeenVisible.value) {
+      hasBeenVisible.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  shouldLoad,
+  (v) => {
+    if (v && !video.value?.readyState) {
+      loading.value = true
+    }
+    if (!v) {
+      loading.value = false
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  activeSrc,
+  (src) => {
+    if (!src || !shouldPlay.value) return
+    loading.value = true
+    queueMicrotask(() => {
+      void play()
+      ensureSoundWithRetry()
+    })
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   if (!video.value) return
@@ -92,12 +178,24 @@ onMounted(() => {
   }
   window.addEventListener('pointerdown', onFirstUserGesture, { passive: true })
   window.addEventListener('keydown', onFirstUserGesture)
+  const onBgmState = (e: Event) => {
+    const ce = e as CustomEvent<{ playing?: boolean }>
+    if (ce.detail?.playing) {
+      ensureSoundWithRetry()
+      tryEnableSound()
+    }
+  }
+  window.addEventListener('bgmstate', onBgmState as EventListener)
   onBeforeUnmount(() => {
     window.removeEventListener('pointerdown', onFirstUserGesture as any)
     window.removeEventListener('keydown', onFirstUserGesture as any)
+    window.removeEventListener('bgmstate', onBgmState as EventListener)
   })
 })
 
-onBeforeUnmount(() => pause())
+onBeforeUnmount(() => {
+  clearSoundRetry()
+  pause()
+})
 </script>
 

@@ -5,7 +5,7 @@
     :src="bgmSrc"
     autoplay
     loop
-    preload="auto"
+    preload="metadata"
     @play="onAudioPlay"
     @pause="onAudioPause"
   />
@@ -59,9 +59,11 @@ async function playMusic() {
   try {
     await el.play()
     isPlaying.value = true
+    window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: true } }))
     return true
   } catch {
     isPlaying.value = false
+    window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: false } }))
     return false
   }
 }
@@ -71,14 +73,17 @@ function pauseMusic() {
   if (!el) return
   el.pause()
   isPlaying.value = false
+  window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: false } }))
 }
 
 function onAudioPlay() {
   isPlaying.value = true
+  window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: true } }))
 }
 
 function onAudioPause() {
   isPlaying.value = false
+  window.dispatchEvent(new CustomEvent('bgmstate', { detail: { playing: false } }))
 }
 
 function onAnyMediaPlay(e: Event) {
@@ -130,7 +135,7 @@ async function toggleMusic() {
 
 onMounted(async () => {
   const el = audioDom.value ?? new Audio(bgmSrc)
-  el.preload = 'auto'
+  el.preload = 'metadata'
   el.loop = true
   el.autoplay = true
   el.volume = 0.6
