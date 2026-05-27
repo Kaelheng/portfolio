@@ -11,7 +11,8 @@
       :preload="shouldPlay ? 'metadata' : 'none'"
       :src="activeSrc"
       @canplay="onCanPlay"
-      @loadeddata="loading = false"
+      @loadeddata="onLoaded"
+      @error="onVideoError"
     />
     <div
       v-if="needsUserGestureForSound"
@@ -99,7 +100,22 @@ function ensureSoundWithRetry() {
   }, 800)
 }
 
+function onLoaded() {
+  loading.value = false
+}
+
+function onVideoError() {
+  loading.value = false
+  const el = video.value
+  if (!el || !props.src) return
+  if (el.src !== props.src) {
+    el.src = props.src
+    el.load()
+  }
+}
+
 function onCanPlay() {
+  loading.value = false
   if (!shouldPlay.value) return
   void play()
   ensureSoundWithRetry()

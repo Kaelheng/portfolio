@@ -84,11 +84,23 @@
             <div class="kicker reveal">SKILLS</div>
             <h2 class="title reveal">技能</h2>
             <p class="reveal mt-5 text-sm leading-relaxed text-[var(--muted)]">
-              开发技能速览：语言、框架与工程协作能力。
+              全栈开发 + 视觉设计：从原型到落地，兼顾体验与实现。
             </p>
           </div>
 
-          <div class="grid gap-5 md:grid-cols-2">
+          <div class="skills-cards grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div class="glass skill-card skill-card--design reveal rounded-[30px] p-6 md:col-span-2 lg:col-span-1">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-semibold text-[var(--text-strong)]">设计与视觉</div>
+                <span class="skill-design-badge">核心优势</span>
+              </div>
+              <p class="mt-2 text-xs leading-relaxed text-[var(--muted)]">
+                高保真界面、品牌视觉与交互原型，强调信息层级与细节质感。
+              </p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <span v-for="t in design" :key="t" class="tag tag--accent">{{ t }}</span>
+              </div>
+            </div>
             <div class="glass skill-card rounded-[30px] p-6">
               <div class="text-sm font-semibold text-[var(--text-strong)]">开发与编程</div>
               <div class="mt-4 flex flex-wrap gap-2">
@@ -215,7 +227,7 @@
         </div>
 
         <div class="mt-10 text-center text-xs text-[var(--muted)]">
-          © {{ new Date().getFullYear() }} {{ BRAND_NAME }} · Minimal luxury · Smooth motion
+          © {{ new Date().getFullYear() }} {{ BRAND_NAME }} · Kaelheng
         </div>
       </div>
     </section>
@@ -435,6 +447,7 @@ onBeforeUnmount(() => {
   activePortfolioSectionId.value = 'about'
 })
 
+const design = ['Figma', 'Illustrator', 'Photoshop', 'UI/UX', '视觉规范', '原型设计']
 const fe = ['Java', 'Python', 'Vue 3', 'JavaScript', 'Spring Boot', 'SQL']
 const tooling = ['Office', 'Git', '项目协作']
 
@@ -623,6 +636,43 @@ const hobbySlides = Object.entries(hobbyImageModules)
 .skill-card:hover {
   transform: translateY(-4px) scale(1.01);
   box-shadow: 0 18px 34px color-mix(in srgb, var(--coffee) 16%, transparent);
+}
+
+.skill-card--design {
+  border-color: color-mix(in srgb, var(--coffee) 32%, var(--border));
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--coffee) 14%, transparent), transparent 55%),
+    color-mix(in srgb, var(--bg-elev) 94%, transparent);
+}
+
+.skill-card--design:hover {
+  box-shadow: 0 20px 38px color-mix(in srgb, var(--coffee) 22%, transparent);
+}
+
+.skill-design-badge {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--coffee) 35%, transparent);
+  background: color-mix(in srgb, var(--coffee) 12%, transparent);
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--coffee);
+}
+
+.tag--accent {
+  border-color: color-mix(in srgb, var(--coffee) 28%, var(--border));
+  background: color-mix(in srgb, var(--coffee) 10%, white);
+}
+
+@media (min-width: 1024px) {
+  .skills-cards {
+    align-items: stretch;
+  }
+
+  .skill-card--design {
+    min-height: 100%;
+  }
 }
 
 .works-single {
